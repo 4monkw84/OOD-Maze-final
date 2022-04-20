@@ -86,6 +86,7 @@ private:
 
 public:
 	void startGame();
+	void resetGame();
 	int getScore() { return score; }
 	int getHealth() { return p_player->getHealth(); }
 	~MazeGame();

@@ -3,7 +3,6 @@
 #include <Windows.h> // for HANDLE, SetConsoleCursorPosition, SetConsoleTextAttribute
 #include <conio.h> // for _getch()
 #include <iostream> // for printf()
-//#include <typeinfo> // for type_info
 #include <chrono> // for clock()
 
 //-----------------------------------------------------------------------------
@@ -237,7 +236,7 @@ bool MazeGame::playerCollision(int x, int y) // Handles all possible collisions 
 	{
 		score += a_enemy.scoreValue;
 		p_player->loseHealth();
-		return true;
+		return false;
 	}
 
 	else if (collision == a_coin.character)
@@ -315,10 +314,20 @@ void MazeGame::enemyMovement()
 
 		if (deltaTime > enemy->getMoveSpeed())
 		{
-			int x = enemy->getX(), y = enemy->getY();
-			drawFloor(x, y);
-			enemy->move();
-			moveObject(enemy, enemy->getStep());
+			cVector2 nextStep = enemy->getNextStep();
+
+			if (getPositionValue(nextStep.x, nextStep.y) == a_player.character)
+			{
+				p_player->loseHealth();
+				score -= a_enemy.scoreValue;
+			}
+			else
+			{
+				int x = enemy->getX(), y = enemy->getY();
+				drawFloor(x, y);
+				moveObject(enemy, enemy->getNextStep());
+				enemy->advanceStep();
+			}
 			enemy->setLastTime(currentTime);
 		}
 	}
@@ -415,13 +424,21 @@ void MazeGame::startGame()
 	gameLoop();
 }
 
-//-----------------------------------------------------------------------------
-MazeGame::~MazeGame()
+void MazeGame::resetGame()
 {
 	for (auto& [key, object] : m_objects)
 	{
 		delete object;
 	}
 
+	m_objects.clear();
+	v_enemies.clear();
+	score = 0;
+
 	reset();
+}
+
+//-----------------------------------------------------------------------------
+MazeGame::~MazeGame()
+{
 }

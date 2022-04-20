@@ -24,8 +24,8 @@ private:
 	const int absMinSpeed = 500;	// lower bounds on how fast the enemy moves (in milliseconds)
 	int		  movementSpeed = 0;    // actual movement speed of enemy (in milliseconds)
 	int	      currentStep = 0;		// used for traversing step vector
-	bool	  movingForward = true; // used in deciding traversal direction
 	clock_t   lastTime = clock();   // used in calculating delta time for movement
+	bool	  movingForward = true;
 
 	//pathfinding
 	void initStats();
@@ -40,8 +40,8 @@ public:
 	void setMaxSteps(); // sets max steps to length of step vector in case of short movement range
 	void addToPath(int x, int y); // adds location to step vector
 	//movement
-	void move();
-	cVector2 getStep();    // gets current step in enemy pathing
+	cVector2 getNextStep();	  // gets the position of the next step in pathing for player collision detection
+	void advanceStep();		  // advances step counter respective to direction moving in
 	void setLastTime(clock_t time); // sets time since last update
 	clock_t getLastTime() { return lastTime; } // returns last time since enemy moved
 	double getMoveSpeed() { return movementSpeed; } // returns movement speed of enemy

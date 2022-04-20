@@ -91,8 +91,7 @@ void GameController::gameOver()
 		switch (_getch())
 		{
 		case Y:
-			delete game;
-			game = new MazeGame;
+			game->resetGame();
 			startGame();
 			break;
 
@@ -108,7 +107,8 @@ void GameController::gameOver()
 
 void GameController::startGame()
 {
-	game = new MazeGame;
+	if(game == nullptr)
+		game = new MazeGame;
 	game->startGame();
 	gameOver();
 }
