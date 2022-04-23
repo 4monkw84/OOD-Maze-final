@@ -4,7 +4,7 @@
 
 int main()
 {
-	std::wstring windowTitle = L"2D Maze Game";
+	std::wstring windowTitle = L"2D Maze Game - Will Monk";
 	SetConsoleTitle(windowTitle.c_str());
 
 	GameController v;

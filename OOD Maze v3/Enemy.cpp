@@ -37,28 +37,6 @@ void Enemy::addToPath(int x, int y)
 	step.push_back(temp);
 }
 
-//void Enemy::move()
-//{
-//		directionCheck();
-//		if (movingForward)
-//		{
-//			currentStep++;
-//		}
-//		else
-//		{
-//			currentStep--;
-//		}
-//}
-
-//cVector2 Enemy::getCurStep()
-//{
-//	if (currentStep == maxSteps)
-//		return step.back();
-//	if (currentStep == 0)
-//		return step.front();
-//	return step.at(currentStep);
-//}
-
 cVector2 Enemy::getNextStep()
 {
 	if (currentStep == 0) // if at start of path
@@ -70,9 +48,9 @@ cVector2 Enemy::getNextStep()
 	}
 	else if (currentStep == maxSteps)
 		return step.at(maxSteps - 1); // if at end of path, next step is 2nd to last element;
-	else if (movingForward == true)
+	else if (movingForward)
 		return step.at(currentStep + 1); // if moving forward, get next element
-	else //(isMovingForward() == false)
+	else 
 		return step.at(currentStep - 1); // else moving backward, get previous element
 }
 
@@ -82,7 +60,7 @@ void Enemy::advanceStep()
 
 	if (maxSteps != 0)
 	{
-		if (movingForward == true)
+		if (movingForward)
 			currentStep++;
 		else
 			currentStep--;

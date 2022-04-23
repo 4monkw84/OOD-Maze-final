@@ -1,7 +1,5 @@
 #pragma once
-
 #include "Object.h"
-#include "cMaze.h"
 
 class Character : public Object
 {

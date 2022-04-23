@@ -6,15 +6,15 @@ class Object
 {
 private:
 	cVector2 position;
-	const char m_char;
-	const int m_colour;
+	const char objChar;
+	const int colour;
 
 public:
 	Object(int x, int y, char objChar, int objColour);
 	virtual ~Object();
 
-	virtual char	getChar() { return m_char; }
-	virtual int		getColour() { return m_colour; }
+	virtual char	getChar() { return objChar; }
+	virtual int		getColour() { return colour; }
 	virtual int		getX() { return position.x; }
 	virtual int		getY() { return position.y; }
 	virtual void	setX(int x) { position.x = x; }

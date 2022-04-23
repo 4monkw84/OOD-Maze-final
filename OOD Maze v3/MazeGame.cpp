@@ -4,11 +4,13 @@
 #include <conio.h> // for _getch()
 #include <iostream> // for printf()
 #include <chrono> // for clock()
+#include <memory> // for std::shared_ptr, std::make_shared
+#include <typeinfo> // for typeid()
 
 //-----------------------------------------------------------------------------
 //						   	 OBJECT MAP FUNCTIONS						     //
 //-----------------------------------------------------------------------------
-int MazeGame::generateKey(int x, int y) // generate a map key using the cantor pairing function to ensure no conflicts between objects
+int MazeGame::generateMapKey(int x, int y) 
 {
 	return ((x + y) * (x + y + 1) / 2 + x);
 }
@@ -22,8 +24,8 @@ void MazeGame::spawnPlayer()
 	getStart(targetPos.x, targetPos.y);
 	setPositionValue(targetPos.x, targetPos.y, a_player.character);
 
-	int key = generateKey(targetPos.x, targetPos.y);
-	p_player = new Player(targetPos.x, targetPos.y, a_player.character, a_player.colour);
+	int key = generateMapKey(targetPos.x, targetPos.y);
+	p_player = std::make_shared<Player>(targetPos.x, targetPos.y, a_player.character, a_player.colour);
 	m_objects.insert(std::make_pair(key, p_player));
 }
 
@@ -35,7 +37,7 @@ void MazeGame::spawnCoins()
 	for (int i = 0; i < a_coin.maxQuantity; i++)
 	{
 		getRandomEmptyPosition(targetPos.x, targetPos.y);
-		m_objects.insert(std::make_pair(generateKey(targetPos.x, targetPos.y), new Coin(targetPos.x, targetPos.y, a_coin.character, a_coin.colour, a_coin.scoreValue)));
+		m_objects.insert(std::make_pair(generateMapKey(targetPos.x, targetPos.y), std::make_shared<Coin>(targetPos.x, targetPos.y, a_coin.character, a_coin.colour, a_coin.scoreValue)));
 		setPositionValue(targetPos.x, targetPos.y, a_coin.character);
 	}
 }
@@ -48,11 +50,10 @@ void MazeGame::spawnEnemies()
 	for (int i = 0; i < a_enemy.maxQuantity; i++)
 	{
 		getRandomEmptyEndpoint(targetPos.x, targetPos.y);
-		int key = generateKey(targetPos.x, targetPos.y); // generate key to store in object map
-		Enemy* enemy = new Enemy(targetPos.x, targetPos.y, a_enemy.character, a_enemy.colour, a_enemy.scoreValue); // create new enemy
+		int key = generateMapKey(targetPos.x, targetPos.y); 
+		std::shared_ptr<Enemy> enemy = std::make_shared<Enemy>(targetPos.x, targetPos.y, a_enemy.character, a_enemy.colour, a_enemy.scoreValue);
 		setPositionValue(targetPos.x, targetPos.y, a_enemy.character); // set the location within the maze to enemy
 		m_objects.insert(std::make_pair(key, enemy)); // insert enemy in object map
-		v_enemies.push_back(enemy); // push enemy to vector
 	}
 }
 
@@ -64,7 +65,7 @@ void MazeGame::spawnMedkits()
 	for (int i = 0; i < a_medkit.maxQuantity; i++)
 	{
 		getRandomEmptyPosition(targetPos.x, targetPos.y);
-		m_objects.insert(std::make_pair(generateKey(targetPos.x, targetPos.y), new Medkit(targetPos.x, targetPos.y, a_medkit.character, a_medkit.colour, a_medkit.scoreValue)));
+		m_objects.insert(std::make_pair(generateMapKey(targetPos.x, targetPos.y), std::make_shared<Medkit>(targetPos.x, targetPos.y, a_medkit.character, a_medkit.colour, a_medkit.scoreValue)));
 		setPositionValue(targetPos.x, targetPos.y, a_medkit.character);
 	}
 }
@@ -76,7 +77,7 @@ void MazeGame::spawnExit()
 	for (int i = 0; i < a_exit.maxQuantity; i++)
 	{
 		getExit(targetPos);
-		m_objects.insert(std::make_pair(generateKey(targetPos.x, targetPos.y), new Exit(targetPos.x, targetPos.y, a_exit.character, a_exit.colour, a_exit.scoreValue)));
+		m_objects.insert(std::make_pair(generateMapKey(targetPos.x, targetPos.y), std::make_shared<Exit>(targetPos.x, targetPos.y, a_exit.character, a_exit.colour, a_exit.scoreValue)));
 		setPositionValue(targetPos.x, targetPos.y, a_exit.character);
 	}
 }
@@ -85,17 +86,17 @@ void MazeGame::spawnExit()
 void MazeGame::initObjects()
 {
 	spawnPlayer();
+	spawnExit();
 	spawnCoins();
+	spawnMedkits();
 	spawnEnemies();
 	enemyPathfinding();
-	spawnMedkits();
-	spawnExit();
 }
 
 //-----------------------------------------------------------------------------
 //                            DRAWING FUNCTIONS                              //
 //-----------------------------------------------------------------------------
-void MazeGame::drawObject(Object* obj)
+void MazeGame::drawObject(std::shared_ptr<Object> obj)
 {
 	// set cursor position to object position, adjusting for draw offset
 	gotoXY(obj->getX() + drawOffsetX, obj->getY() + drawOffsetY);
@@ -105,7 +106,7 @@ void MazeGame::drawObject(Object* obj)
 }
 
 //-----------------------------------------------------------------------------
-void MazeGame::drawFloor(short x, short y)
+void MazeGame::drawFloor(int x, int y)
 {
 	gotoXY(x + drawOffsetX, y + drawOffsetY);
 	printf("%c", getFloorChar());
@@ -125,11 +126,13 @@ void MazeGame::drawAllObjects()
 //-----------------------------------------------------------------------------
 void MazeGame::drawGuide()
 {
-	for (size_t i = 0; i < objAttrs.size(); i++)
+	short yOffset = 0;
+	for (auto& attribs : objAttrs)
 	{
-		gotoXY(47 + drawOffsetX, drawOffsetY + i);
-		setConsoleColour(objAttrs.at(i).colour);
-		printf("%s: %c", objAttrs.at(i).name, objAttrs.at(i).character);
+		gotoXY(47 + drawOffsetX, drawOffsetY + yOffset);
+		yOffset++;
+		setConsoleColour(attribs.colour);
+		printf("%s: %c", attribs.name, attribs.character);
 	}
 	resetCursor();
 }
@@ -168,49 +171,45 @@ void MazeGame::drawStats()
 		}
 		for (int i = 0; i < difference; i++)
 		{
-			std::cout << " ";
+			printf(" ");
 		}
 	}
 
-	// Displaying score
-	gotoXY(posX, posY + 1);
+	posY++;
+	gotoXY(posX, posY);
 	setConsoleColour(white);
-	printf("Score: %i", score);
+	std::cout << "Score: " << score << "   ";
 	resetCursor();
 }
 
 //-----------------------------------------------------------------------------
 //                        OBJECT MOVEMENT FUNCTIONS                          //
 //-----------------------------------------------------------------------------
-void MazeGame::moveObject(Object* obj, int x, int y)
+void MazeGame::moveObject(std::shared_ptr <Object> obj, int x, int y)
 {
-	int objX, objY;
-	objX = obj->getX(); // gets current x coord
-	objY = obj->getY(); // gets current y coord
-	setPositionValue(objX, objY, getFloorChar()); //clears current cell in maze
-	m_objects.erase(generateKey(objX, objY)); // erases map entry 
+	cVector2 curPos = obj->getPosition();
+	drawFloor(curPos.x, curPos.y);
+	setPositionValue(curPos.x, curPos.y, getFloorChar());
+	m_objects.erase(generateMapKey(curPos.x, curPos.y));
 
 	//sets new location
-	setPositionValue(x, y, obj->getChar()); // sets new location char to objects
-	obj->setX(x); // sets object x to new location
-	obj->setY(y); // sets object y to new location
-	m_objects.insert(std::make_pair(generateKey(x, y), obj)); // creates new map entry with updated key
+	setPositionValue(x, y, obj->getChar());
+	obj->setX(x); 
+	obj->setY(y); 
+	m_objects.insert(std::make_pair(generateMapKey(x, y), obj)); 
 }
 
 //-----------------------------------------------------------------------------
-void MazeGame::moveObject(Object* obj, cVector2 pos)
+void MazeGame::moveObject(std::shared_ptr <Object> obj, cVector2 pos)
 {
-	int objX, objY;
-	objX = obj->getX(); // gets current x coord
-	objY = obj->getY(); // gets current y coord
-	setPositionValue(objX, objY, getFloorChar()); //clears current cell in maze
-	m_objects.erase(generateKey(objX, objY)); // erases map entry 
+	cVector2 curPos = obj->getPosition();
+	drawFloor(curPos.x, curPos.y);
+	setPositionValue(curPos.x, curPos.y, getFloorChar());
+	m_objects.erase(generateMapKey(curPos.x, curPos.y)); 
 
-	//sets new location
-	setPositionValue(pos.x, pos.y, obj->getChar()); // sets new location char to objects
-	obj->setX(pos.x); // sets object x to new location
-	obj->setY(pos.y); // sets object y to new location
-	m_objects.insert(std::make_pair(generateKey(pos.x, pos.y), obj)); // creates new map entry with updated key
+	setPositionValue(pos.x, pos.y, obj->getChar()); 
+	obj->setPosition(pos);
+	m_objects.insert(std::make_pair(generateMapKey(pos.x, pos.y), obj));
 }
 
 //-----------------------------------------------------------------------------
@@ -221,20 +220,24 @@ bool MazeGame::playerCollision(int x, int y) // Handles all possible collisions 
 	char collision = getPositionValue(x, y);
 
 	if (collision == getWallChar())
+	{
 		return false;
+	}
 
-	if (collision == getFloorChar())
+	else if (collision == getFloorChar())
+	{
 		return true;
+	}
 
-	if (collision == a_exit.character)
+	else if (collision == a_exit.character)
 	{
 		score += a_exit.scoreValue;
 		return true;
 	}
 
-	if (collision == a_enemy.character)
+	else if (collision == a_enemy.character)
 	{
-		score += a_enemy.scoreValue;
+		score -= a_enemy.scoreValue;
 		p_player->loseHealth();
 		return false;
 	}
@@ -243,11 +246,10 @@ bool MazeGame::playerCollision(int x, int y) // Handles all possible collisions 
 		score += a_coin.scoreValue;
 
 	else if (collision == a_medkit.character)
-		p_player->addHealth();
+		p_player->gainHealth();
 
-	int key = generateKey(x, y); // find object in map
-	delete m_objects.at(key);	 // delete pointer in map
-	m_objects.erase(key);		 // erase the object pointer from map
+	int key = generateMapKey(x, y);
+	m_objects.erase(key);
 	return true;
 }
 
@@ -263,36 +265,32 @@ void MazeGame::movementInput(int key)
 	{
 	case UP: //Maze is dumb, up and down are inverted
 	case W:
-		if (playerCollision(plrX, plrY - 1) == true)
+		if (playerCollision(plrX, plrY - 1))
 		{
-			drawFloor(plrX, plrY);
 			moveObject(p_player, plrX, plrY - 1);
 		}
 		break;
 
 	case DOWN: //Maze is dumb, up and down are inverted
 	case S:
-		if (playerCollision(plrX, plrY + 1) == true)
+		if (playerCollision(plrX, plrY + 1))
 		{
-			drawFloor(plrX, plrY);
 			moveObject(p_player, plrX, plrY + 1);
 		}
 		break;
 
 	case LEFT:
 	case A:
-		if (playerCollision(plrX - 1, plrY) == true)
+		if (playerCollision(plrX - 1, plrY))
 		{
-			drawFloor(plrX, plrY);
 			moveObject(p_player, plrX - 1, plrY);
 		}
 		break;
 
 	case RIGHT:
 	case D:
-		if (playerCollision(plrX + 1, plrY) == true)
+		if (playerCollision(plrX + 1, plrY))
 		{
-			drawFloor(plrX, plrY);
 			moveObject(p_player, plrX + 1, plrY);
 		}
 		break;
@@ -307,28 +305,33 @@ void MazeGame::enemyMovement()
 	clock_t currentTime = clock();
 	clock_t lastTime;
 	clock_t deltaTime;
-	for (auto& enemy : v_enemies)
+	for (auto& [key, object] : m_objects)
 	{
-		lastTime = enemy->getLastTime();
-		deltaTime = currentTime - lastTime;
-
-		if (deltaTime > enemy->getMoveSpeed())
+		if (typeid(*object) == typeid(Enemy))
 		{
-			cVector2 nextStep = enemy->getNextStep();
+			std::shared_ptr<Enemy> enemy = std::dynamic_pointer_cast<Enemy>(object);
 
-			if (getPositionValue(nextStep.x, nextStep.y) == a_player.character)
+			lastTime = enemy->getLastTime();
+			deltaTime = currentTime - lastTime;
+
+			if (deltaTime > enemy->getMoveSpeed())
 			{
-				p_player->loseHealth();
-				score -= a_enemy.scoreValue;
+				cVector2 nextStep = enemy->getNextStep();
+
+				if (getPositionValue(nextStep.x, nextStep.y) == a_player.character)
+				{
+					p_player->loseHealth();
+					score -= a_enemy.scoreValue;
+				}
+				else
+				{
+					int x = enemy->getX(), y = enemy->getY();
+					drawFloor(x, y);
+					moveObject(enemy, enemy->getNextStep());
+					enemy->advanceStep();
+				}
+				enemy->setLastTime(currentTime);
 			}
-			else
-			{
-				int x = enemy->getX(), y = enemy->getY();
-				drawFloor(x, y);
-				moveObject(enemy, enemy->getNextStep());
-				enemy->advanceStep();
-			}
-			enemy->setLastTime(currentTime);
 		}
 	}
 }
@@ -336,39 +339,43 @@ void MazeGame::enemyMovement()
 void MazeGame::enemyPathfinding()
 {
 	cVector2 targetPos;
-	//for (int i = 0; i < m_enemies.size(); i++)
-	for (auto& enemy : v_enemies)
+	for (auto& [key, object] : m_objects)
 	{
-		targetPos = enemy->getPosition();
-		enemy->addToPath(targetPos.x, targetPos.y);
-		for (int i = 1; i < enemy->getMaxDistance(); i++) // offset by 1 to account for starting location
+		if (typeid(*object) == typeid(Enemy))
 		{
-			// check if up cell is empty, adding to path if it is
-			if (getPositionValue(targetPos.x, targetPos.y - 1) == getFloorChar())
+			std::shared_ptr<Enemy> enemy = std::dynamic_pointer_cast<Enemy>(object);
+
+			targetPos = enemy->getPosition();
+			enemy->addToPath(targetPos.x, targetPos.y);
+			for (int i = 1; i < enemy->getMaxDistance(); i++) // offset by 1 to account for starting location
 			{
-				enemy->addToPath(targetPos.x, targetPos.y - 1);
-				targetPos.y--;
+				// check if up cell is empty, adding to path if it is
+				if (getPositionValue(targetPos.x, targetPos.y - 1) == getFloorChar())
+				{
+					enemy->addToPath(targetPos.x, targetPos.y - 1);
+					targetPos.y--;
+				}
+				// check if down cell is empty, adding to path if it is
+				else if (getPositionValue(targetPos.x, targetPos.y + 1) == getFloorChar())
+				{
+					enemy->addToPath(targetPos.x, targetPos.y + 1);
+					targetPos.y++;
+				}
+				//check if left cell is empty, adding to path if it is
+				else if (getPositionValue(targetPos.x - 1, targetPos.y) == getFloorChar())
+				{
+					enemy->addToPath(targetPos.x - 1, targetPos.y);
+					targetPos.x--;
+				}
+				// check if right cell is empty, adding to path if it is
+				else if (getPositionValue(targetPos.x + 1, targetPos.y) == getFloorChar())
+				{
+					enemy->addToPath(targetPos.x + 1, targetPos.y);
+					targetPos.x++;
+				}
 			}
-			// check if down cell is empty, adding to path if it is
-			else if (getPositionValue(targetPos.x, targetPos.y + 1) == getFloorChar())
-			{
-				enemy->addToPath(targetPos.x, targetPos.y + 1);
-				targetPos.y++;
-			}
-			//check if left cell is empty, adding to path if it is
-			else if (getPositionValue(targetPos.x - 1, targetPos.y) == getFloorChar())
-			{
-				enemy->addToPath(targetPos.x - 1, targetPos.y);
-				targetPos.x--;
-			}
-			// check if right cell is empty, adding to path if it is
-			else if (getPositionValue(targetPos.x + 1, targetPos.y) == getFloorChar())
-			{
-				enemy->addToPath(targetPos.x + 1, targetPos.y);
-				targetPos.x++;
-			}
+			enemy->setMaxSteps();
 		}
-		enemy->setMaxSteps();
 	}
 }
 
@@ -426,13 +433,7 @@ void MazeGame::startGame()
 
 void MazeGame::resetGame()
 {
-	for (auto& [key, object] : m_objects)
-	{
-		delete object;
-	}
-
 	m_objects.clear();
-	v_enemies.clear();
 	score = 0;
 
 	reset();

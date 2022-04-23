@@ -55,12 +55,6 @@ public:  //  cMaze public interface methods
 	// get the character used by the maze to indicate a floor space
 	char    getFloorChar() { return m_floorChar; }
 
-	// get the character used by the maze to indicate the player starting location
-	char    getStartChar() { return m_startChar; }
-
-	// get the character used by the maze to indicate the player exit location
-	char    getExitChar() { return m_exitChar; }
-
 	// get the maze traversal target in milliseconds
 	double	getTimeLimit_ms() { return m_msLimit; }
 
@@ -97,7 +91,6 @@ protected:
 	char        m_floorChar{ ' ' };      // empty space character
 	char        m_wallChar{ (char)178 }; // this is a block in the extended ascii table
 	char        m_startChar{ 'S' };     // starting space character
-	char        m_exitChar{ (char)31 };      // exit space character
 	char        m_errorChar{ 0 };       // used when querying the maze to report an error
 	bool        m_printDuringGeneration{ false };  // if true, prints progress while map is generated
 	bool		m_labelAllEndpoints{ false }; // if true, all corridor ends are labeled with letters, starting with 'a'

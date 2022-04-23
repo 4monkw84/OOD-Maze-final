@@ -199,8 +199,6 @@ void    cMaze::generateMaze()
 	std::stack<int> back_trackX, back_trackY;
 	std::stack<cVector2> back_track;
 
-	// Set the start cell
-	p_Cells[randPos.y][randPos.x].display = getStartChar();
 	// Set start cell as visited;
 	p_Cells[randPos.y][randPos.x].visited = true;
 
@@ -318,7 +316,6 @@ void    cMaze::generateMaze()
 	m_endpoints.push_back(randPos);
 	a_exit = m_endpoints[m_mtRand() % (m_endpoints.size() - 1) + 1];
 
-	p_Cells[a_exit.y][a_exit.x].display = getExitChar();
 	if (m_printDuringGeneration)
 		printCells();
 }
@@ -469,8 +466,6 @@ char    cMaze::getPositionValue(int col, int row)
 //-----------------------------------------------------------------------------
 char    cMaze::setPositionValue(int col, int row, char value)
 {
-	char x = this->getExitChar();
-
 	char    old = getPositionValue(col, row);
 	if (m_errorChar == old)
 		return m_errorChar;

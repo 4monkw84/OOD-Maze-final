@@ -9,7 +9,7 @@
 
 class GameController : public Renderer
 {
-	MazeGame* game = nullptr;
+	MazeGame game;
 	int highscore = 0;
 
 	enum Colours { white = 15, yellow = 14, pink = 13, red = 12, aqua = 11, green = 10 };

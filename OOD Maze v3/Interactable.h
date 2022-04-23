@@ -5,10 +5,9 @@
 class Interactable
 {
 protected:
-	const int m_scoreValue;
+	const int scoreValue;
 
 public:
 	Interactable(int scoreValue);
 	virtual ~Interactable();
-	virtual int getScore() { return m_scoreValue; }
 };

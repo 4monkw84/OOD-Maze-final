@@ -8,8 +8,7 @@ void GameController::menuActions(int input)
 	switch (input)
 	{
 	case 0:
-		game = new MazeGame;
-		game->startGame();
+		game.startGame();
 		gameOver();
 		break;
 
@@ -56,7 +55,7 @@ void GameController::gameOver()
 
 	gotoXY(targetX, targetY);
 
-	if (game->getHealth() > 0)
+	if (game.getPlayerHealth() > 0)
 	{
 		setConsoleColour(green);
 		printf("You win!");
@@ -68,12 +67,12 @@ void GameController::gameOver()
 	}
 	targetY++;
 	gotoXY(targetX, targetY);
-	printf("Your final score was: %i", game->getScore());
+	printf("Your final score was: %i", game.getScore());
 
 	if (highscore == 0)
-		highscore = game->getScore();
-	if (game->getScore() > highscore)
-		highscore = game->getScore();
+		highscore = game.getScore();
+	if (game.getScore() > highscore)
+		highscore = game.getScore();
 
 	targetY++;
 	gotoXY(targetX, targetY);
@@ -91,7 +90,7 @@ void GameController::gameOver()
 		switch (_getch())
 		{
 		case Y:
-			game->resetGame();
+			game.resetGame();
 			startGame();
 			break;
 
@@ -107,9 +106,7 @@ void GameController::gameOver()
 
 void GameController::startGame()
 {
-	if(game == nullptr)
-		game = new MazeGame;
-	game->startGame();
+	game.startGame();
 	gameOver();
 }
 

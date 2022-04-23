@@ -4,7 +4,7 @@
 #include "Interactable.h"
 #include <vector> // for std::vector
 #include <chrono> // for clock_t
-#include <vector> // for mt_
+#include <random> // for mt_19937
 
 class Enemy : public Character, public Interactable
 {
@@ -44,5 +44,5 @@ public:
 	void advanceStep();		  // advances step counter respective to direction moving in
 	void setLastTime(clock_t time); // sets time since last update
 	clock_t getLastTime() { return lastTime; } // returns last time since enemy moved
-	double getMoveSpeed() { return movementSpeed; } // returns movement speed of enemy
+	int getMoveSpeed() { return movementSpeed; } // returns movement speed of enemy
 };

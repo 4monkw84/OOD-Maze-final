@@ -5,7 +5,7 @@ Player::Player(int x, int y, char objChar, int objColour)
 {
 }
 
-void Player::addHealth()
+void Player::gainHealth()
 {
 	if (health < maxHealth)
 		health++;
